@@ -1,6 +1,6 @@
 import { createProvider, type AuthContext, type ProviderEnv } from "@earendil-works/pi-ai";
 import { discoverClaudeModels, getClaudeStatus, LOGIN_HINT, POWERSHELL_ENV } from "./claude-cli.ts";
-import { API_ID, CLAUDE_CODE_MODELS, modelFromDiscovery, PROVIDER_ID } from "./model-catalog.ts";
+import { API_ID, catalogModels, CLAUDE_CODE_MODELS, modelFromDiscovery, PROVIDER_ID } from "./model-catalog.ts";
 import { streamClaudeCode } from "./stream.ts";
 
 const PROVIDER_ENV_NAMES = [
@@ -96,7 +96,8 @@ export function createClaudeCodeProvider() {
     },
     models: CLAUDE_CODE_MODELS,
     async fetchModels({ signal }) {
-      const models = (await discoverClaudeModels(claudeCodeEnv(), signal)).map(modelFromDiscovery);
+      const discovered = (await discoverClaudeModels(claudeCodeEnv(), signal)).map(modelFromDiscovery);
+      const models = [...discovered, ...catalogModels(new Set(discovered.map((model) => model.id)))];
       discoveredIds = new Set(models.map((model) => model.id));
       return models;
     },

@@ -152,6 +152,25 @@ export function modelFromDiscovery(info: DiscoveredClaudeModel): ClaudeCodeModel
 
 export const CLAUDE_CODE_MODELS: ClaudeCodeModel[] = FALLBACK_DISCOVERY.map(modelFromDiscovery);
 
+/**
+ * Every built-in Anthropic chat model not in `known`, routed by its own id. The Claude Code CLI
+ * accepts any model id with --model, while its picker only lists a few aliases.
+ */
+export function catalogModels(known: ReadonlySet<string>): ClaudeCodeModel[] {
+  return Object.values(BUILTIN_ANTHROPIC_MODELS)
+    .filter((builtin) => !known.has(builtin.id))
+    .map((builtin) =>
+      modelFromDiscovery({
+        value: builtin.id,
+        resolvedModel: builtin.id,
+        displayName: builtin.name,
+        description: "",
+        supportsEffort: builtin.reasoning,
+        supportsAdaptiveThinking: builtin.compat?.forceAdaptiveThinking === true,
+      }),
+    );
+}
+
 export function nativeModel(model: string): string {
   const direct = NATIVE_ROUTE_BY_ID.get(model);
   if (direct) return direct;
